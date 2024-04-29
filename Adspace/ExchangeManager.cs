@@ -562,7 +562,7 @@ namespace XiboClient.Adspace
 
                         // Get and impression/error URLs included with this wrap
                         XmlNode errorUrlNode = wrapper.SelectSingleNode("./Error");
-                        if (errorUrlNode != null)
+                        if (errorUrlNode != null && !string.IsNullOrEmpty(errorUrlNode.InnerText))
                         {
                             ad.ErrorUrls.Add(errorUrlNode.InnerText.Trim());
                         }
@@ -708,7 +708,7 @@ namespace XiboClient.Adspace
 
                             // Get and impression/error URLs included with this wrap
                             XmlNode errorUrlNode = inlineNode.SelectSingleNode("./Error");
-                            if (errorUrlNode != null)
+                            if (errorUrlNode != null && !string.IsNullOrEmpty(errorUrlNode.InnerText))
                             {
                                 string errorUrl = errorUrlNode.InnerText.Trim();
                                 if (errorUrl != "about:blank")
@@ -920,6 +920,8 @@ namespace XiboClient.Adspace
         {
             foreach (string url in urls)
             {
+                if (string.IsNullOrEmpty(url)) continue;
+
                 try
                 {
                     // Macros
