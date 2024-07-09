@@ -303,7 +303,7 @@
       <Version>1.8.9</Version>
     </PackageReference>
     <PackageReference Include="CefSharp.Wpf">
-      <Version>115.3.110</Version>
+      <Version>126.2.70</Version>
     </PackageReference>
     <PackageReference Include="Crc32.NET">
       <Version>1.2.0</Version>
@@ -333,7 +333,7 @@
       <Version>160.1000.6</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.Web.WebView2">
-      <Version>1.0.1938.49</Version>
+      <Version>1.0.2592.51</Version>
     </PackageReference>
     <PackageReference Include="NetMQ">
       <Version>4.0.1.13</Version>
@@ -342,7 +342,7 @@
       <Version>13.0.3</Version>
     </PackageReference>
     <PackageReference Include="NodaTime">
-      <Version>3.1.9</Version>
+      <Version>3.1.11</Version>
     </PackageReference>
     <PackageReference Include="Ookii.Dialogs.Wpf">
       <Version>5.0.1</Version>
