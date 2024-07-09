@@ -139,7 +139,15 @@ namespace XiboClient.Rendering
             if (_duration == 0)
             {
                 // Add the duration of the video
-                watchmanTtl = watchmanTtl.Add(this.mediaElement.NaturalDuration.TimeSpan);
+                if (this.mediaElement.NaturalDuration == System.Windows.Duration.Automatic)
+                {
+                    // This is strange, so we will just log and keep the watchman duration at 60 seconds
+                    LogMessage.Audit("Video", "MediaElement_MediaOpened", "Duration not detected on open");
+                }
+                else
+                {
+                    watchmanTtl = watchmanTtl.Add(this.mediaElement.NaturalDuration.TimeSpan);
+                }
             }
             else
             {
