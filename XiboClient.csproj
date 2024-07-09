@@ -132,6 +132,7 @@
     <Compile Include="Error\LayoutInvalidException.cs" />
     <Compile Include="Error\ShowSplashScreenException.cs" />
     <Compile Include="Helpers\CefJsDialogHandler.cs" />
+    <Compile Include="Helpers\CefsharpLifespanHandler.cs" />
     <Compile Include="Helpers\GeoHelper.cs" />
     <Compile Include="Helpers\Strings.cs" />
     <Compile Include="Helpers\XiboRequestHandler.cs" />

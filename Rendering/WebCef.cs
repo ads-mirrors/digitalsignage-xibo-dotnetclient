@@ -1,5 +1,5 @@
 ﻿/**
- * Copyright (C) 2021 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -60,6 +60,7 @@ namespace XiboClient.Rendering
                 Name = "region_" + this.regionId
             };
             webView.RequestContext = new CefSharp.RequestContext(requestContextSettings);
+            webView.LifeSpanHandler = new CefsharpLifespanHandler();
 
             // Configure run time CEF settings?
             CefSharp.Cef.UIThreadTaskFactory.StartNew(() =>
