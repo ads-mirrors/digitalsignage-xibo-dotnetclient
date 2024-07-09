@@ -1,5 +1,5 @@
 ﻿/**
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -99,7 +99,8 @@ namespace XiboClient.Rendering
                 await CoreWebView2Environment.CreateAsync(
                         null,
                         ApplicationSettings.Default.LibraryPath,
-                        environmentOptions));
+                        environmentOptions
+                    ));
 
             // Proxy
             // Not yet supported https://github.com/MicrosoftEdge/WebView2Feedback/issues/132
@@ -135,6 +136,7 @@ namespace XiboClient.Rendering
             if (e.IsSuccess)
             {
                 webView.CoreWebView2.Settings.IsPinchZoomEnabled = isPinchToZoomEnabled;
+                webView.CoreWebView2.Settings.IsStatusBarEnabled = false;
                 _webViewInitialised = true;
             }
             else
