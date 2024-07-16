@@ -1,5 +1,5 @@
 ﻿/**
- * Copyright (C) 2021 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -60,6 +60,7 @@ namespace XiboClient.Rendering
                 Name = "region_" + this.regionId
             };
             webView.RequestContext = new CefSharp.RequestContext(requestContextSettings);
+            webView.LifeSpanHandler = new CefsharpLifespanHandler();
 
             // Configure run time CEF settings?
             CefSharp.Cef.UIThreadTaskFactory.StartNew(() =>
@@ -72,14 +73,14 @@ namespace XiboClient.Rendering
                     // NTLM/Auth Server White Lists.
                     if (!string.IsNullOrEmpty(ApplicationSettings.Default.AuthServerWhitelist))
                     {
-                        if (!webView.RequestContext.SetPreference("auth.server_whitelist", ApplicationSettings.Default.AuthServerWhitelist, out string error))
+                        if (!webView.RequestContext.SetPreference("auth.server_allowlist", ApplicationSettings.Default.AuthServerWhitelist, out string error))
                         {
-                            Trace.WriteLine(new LogMessage("WebCef", "RenderMedia: auth.server_whitelist. e = " + error), LogType.Info.ToString());
+                            Trace.WriteLine(new LogMessage("WebCef", "RenderMedia: auth.server_allowlist. e = " + error), LogType.Info.ToString());
                         }
 
-                        if (!webView.RequestContext.SetPreference("auth.negotiate_delegate_whitelist", ApplicationSettings.Default.AuthServerWhitelist, out string error2))
+                        if (!webView.RequestContext.SetPreference("auth.negotiate_delegate_allowlist", ApplicationSettings.Default.AuthServerWhitelist, out string error2))
                         {
-                            Trace.WriteLine(new LogMessage("WebCef", "RenderMedia: auth.negotiate_delegate_whitelist. e = " + error2), LogType.Info.ToString());
+                            Trace.WriteLine(new LogMessage("WebCef", "RenderMedia: auth.negotiate_delegate_allowlist. e = " + error2), LogType.Info.ToString());
                         }
                     }
                 } 

@@ -1,6 +1,6 @@
-/*
+/**
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * This file is part of Xibo.
  *
@@ -244,7 +244,7 @@ namespace XiboClient.XmdsAgents
                 "windows",
                 ApplicationSettings.Default.ClientVersion,
                 ApplicationSettings.Default.ClientCodeVersion,
-                Environment.OSVersion.ToString(),
+                HardwareKey.OperatingSystemAsJson(),
                 key.MacAddress,
                 key.Channel,
                 key.getXmrPublicKey(),

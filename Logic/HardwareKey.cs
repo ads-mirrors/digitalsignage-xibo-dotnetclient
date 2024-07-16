@@ -17,6 +17,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+using Newtonsoft.Json;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Generators;
 using Org.BouncyCastle.OpenSsl;
@@ -29,12 +30,15 @@ using System.Management;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
+using System.Text;
+using System.Threading;
 
 namespace XiboClient
 {
     class HardwareKey
     {
         private static object _locker = new object();
+        private static string operatingSystemJson = string.Empty;
 
         private static AsymmetricCipherKeyPair _keys;
         private string _hardwareKey;
@@ -300,6 +304,29 @@ namespace XiboClient
                 .AddressList
                 .FirstOrDefault(ip => ip.AddressFamily == AddressFamily.InterNetwork)
                 .ToString();
+        }
+
+        public static string OperatingSystemAsJson()
+        {
+            if (string.IsNullOrEmpty(operatingSystemJson))
+            {
+                StringBuilder sb = new StringBuilder();
+                using (StringWriter sw = new StringWriter(sb))
+                using (JsonWriter writer = new JsonTextWriter(sw))
+                {
+                    writer.Formatting = Formatting.None;
+                    writer.WriteStartObject();
+                    writer.WritePropertyName("version");
+                    writer.WriteValue(Environment.OSVersion.Platform.ToString());
+                    writer.WritePropertyName("sdk");
+                    writer.WriteValue(Environment.OSVersion.Version.ToString());
+                    writer.WriteEndObject();
+                }
+
+                operatingSystemJson = sb.ToString();
+            }
+
+            return operatingSystemJson;            
         }
     }
 }

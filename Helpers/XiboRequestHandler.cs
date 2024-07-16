@@ -33,10 +33,10 @@ namespace XiboClient.Helpers
             _isConfigureProxy = isConfigureProxy;
         }
 
-        protected override void OnRenderProcessTerminated(IWebBrowser chromiumWebBrowser, IBrowser browser, CefTerminationStatus status)
+        protected override void OnRenderProcessTerminated(IWebBrowser chromiumWebBrowser, IBrowser browser, CefTerminationStatus status, int errorCode, string errorString)
         {
             // If the render process crashed, we should just log.
-            Trace.WriteLine(new LogMessage("XiboRequestHandler", "OnRenderProcessTerminate: a cef sub process has terminated. " + status.ToString()), LogType.Error.ToString());
+            Trace.WriteLine(new LogMessage("XiboRequestHandler", "OnRenderProcessTerminate: a cef sub process has terminated. " + status.ToString() + ", message: " + errorString), LogType.Error.ToString());
         }
 
         protected override bool GetAuthCredentials(IWebBrowser chromiumWebBrowser, IBrowser browser, string originUrl, bool isProxy, string host, int port, string realm, string scheme, IAuthCallback callback)
