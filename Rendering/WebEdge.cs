@@ -118,6 +118,10 @@ namespace XiboClient.Rendering
             {
                 
             }*/
+
+            // Console logs
+            this.webView.CoreWebView2.GetDevToolsProtocolEventReceiver("Log.entryAdded").DevToolsProtocolEventReceived += OnConsoleMessage;
+            await this.webView.CoreWebView2.CallDevToolsProtocolMethodAsync("Log.enable", "{}");
         }
 
         /// <summary>
@@ -281,6 +285,19 @@ namespace XiboClient.Rendering
             html += "<!--VIEWPORT=" + WidthIntended.ToString() + "x" + HeightIntended.ToString() + "-->";
             html += "<!--CACHEDATE=" + DateTime.Now.ToString() + "-->";
             return html;
+        }
+
+        /// <summary>
+        /// Log console messages
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void OnConsoleMessage(object sender, CoreWebView2DevToolsProtocolEventReceivedEventArgs e)
+        {
+            if (e != null && e.ParameterObjectAsJson != null)
+            {
+                Trace.WriteLine("WebView2:" + e.ParameterObjectAsJson);
+            }
         }
     }
 }
