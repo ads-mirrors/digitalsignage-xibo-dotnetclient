@@ -746,6 +746,8 @@ namespace XiboClient.Rendering
                     // Call any error urls.
                     foreach (string url in media.AdspaceExchangeErrorUrls)
                     {
+                        if (string.IsNullOrEmpty(url)) continue;
+
                         try
                         {
                             // Macros
@@ -756,7 +758,10 @@ namespace XiboClient.Rendering
                             // Call the URL
                             new Flurl.Url(uri).WithTimeout(10).GetAsync().ContinueWith(t =>
                             {
-                                LogMessage.Error("Region", "StopMedia", "failed to report error to " + uri);
+                                if (t.Exception != null)
+                                {
+                                    LogMessage.Error("Region", "StopMedia", "failed to report error to " + uri + ", e: " + t.Exception.Message);
+                                }
                             },
                             TaskContinuationOptions.OnlyOnFaulted);
                         }

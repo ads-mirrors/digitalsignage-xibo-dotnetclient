@@ -1,5 +1,5 @@
 ﻿/**
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -139,7 +139,15 @@ namespace XiboClient.Rendering
             if (_duration == 0)
             {
                 // Add the duration of the video
-                watchmanTtl = watchmanTtl.Add(this.mediaElement.NaturalDuration.TimeSpan);
+                if (this.mediaElement.NaturalDuration == System.Windows.Duration.Automatic)
+                {
+                    // This is strange, so we will just log and keep the watchman duration at 60 seconds
+                    LogMessage.Audit("Video", "MediaElement_MediaOpened", "Duration not detected on open");
+                }
+                else
+                {
+                    watchmanTtl = watchmanTtl.Add(this.mediaElement.NaturalDuration.TimeSpan);
+                }
             }
             else
             {
@@ -217,16 +225,6 @@ namespace XiboClient.Rendering
         {
             Trace.WriteLine(new LogMessage("Video", "MediaElement_Loaded: " + this.Id + " Control loaded, calling Play."), LogType.Audit.ToString());
 
-            try
-            {
-                this.mediaElement.Play();
-            }
-            catch (Exception ex)
-            {
-                // Problem calling play, we should expire.
-                Trace.WriteLine(new LogMessage("Video", "MediaElement_Loaded: " + this.Id + " Media Failed. E = " + ex.Message), LogType.Error.ToString());
-            }
-
             // We make a watchman to check that the video actually gets loaded.
             _StartWatchman = new DispatcherTimer { Interval = TimeSpan.FromSeconds(ApplicationSettings.Default.VideoStartTimeout) };
             _StartWatchman.Tick += (timerSender, args) =>
@@ -248,6 +246,20 @@ namespace XiboClient.Rendering
             };
 
             _StartWatchman.Start();
+
+            // Actually play the video
+            try
+            {
+                this.mediaElement.Play();
+            }
+            catch (Exception ex)
+            {
+                // Problem calling play, we should expire.
+                Trace.WriteLine(new LogMessage("Video", "MediaElement_Loaded: " + this.Id + " Media Failed. E = " + ex.Message), LogType.Error.ToString());
+
+                // Cancel the watchman
+                _StartWatchman.Stop();
+            }
         }
 
         #endregion

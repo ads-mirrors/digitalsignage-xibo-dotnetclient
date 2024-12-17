@@ -28,6 +28,7 @@ using System.Threading;
 using Swan;
 using System.IO;
 using XiboClient.Log;
+using System.Web.Services.Protocols;
 
 namespace XiboClient.XmdsAgents
 {
@@ -142,52 +143,61 @@ namespace XiboClient.XmdsAgents
                         {
                             if (widget.ForceUpdate || !widget.IsUpToDate)
                             {
-                                // Download using XMDS GetResource
-                                using (xmds.xmds xmds = new xmds.xmds())
+                                try
                                 {
-                                    xmds.Credentials = null;
-                                    xmds.UseDefaultCredentials = true;
-
-                                    xmds.Url = ApplicationSettings.Default.XiboClient_xmds_xmds + "&method=getData";
-                                    string result = xmds.GetData(ApplicationSettings.Default.ServerKey, ApplicationSettings.Default.HardwareKey, widget.WidgetId);
-
-                                    // Write the result to disk
-                                    using (FileStream fileStream = File.Open(widget.Path, FileMode.Create, FileAccess.Write, FileShare.Read))
+                                    // Download using XMDS GetResource
+                                    using (xmds.xmds xmds = new xmds.xmds())
                                     {
-                                        using (StreamWriter sw = new StreamWriter(fileStream))
-                                        {
-                                            sw.Write(result);
-                                            sw.Close();
-                                        }
-                                    }
+                                        xmds.Credentials = null;
+                                        xmds.UseDefaultCredentials = true;
 
-                                    // Clear the force update flag if set.
-                                    widget.UpdatedDt = DateTime.Now;
-                                    widget.ForceUpdate = false;
+                                        xmds.Url = ApplicationSettings.Default.XiboClient_xmds_xmds + "&method=getData";
+                                        string result = xmds.GetData(ApplicationSettings.Default.ServerKey, ApplicationSettings.Default.HardwareKey, widget.WidgetId);
 
-                                    // Load the result into a JSON response.
-                                    try
-                                    {
-                                        JObject json = JsonConvert.DeserializeObject<JObject>(result);
-                                        if (json != null && json.ContainsKey("files"))
+                                        // Write the result to disk
+                                        using (FileStream fileStream = File.Open(widget.Path, FileMode.Create, FileAccess.Write, FileShare.Read))
                                         {
-                                            foreach (JObject file in json.GetValueOrDefault("files").Cast<JObject>())
+                                            using (StreamWriter sw = new StreamWriter(fileStream))
                                             {
-                                                // Make a new fileagent somehow, to download this file.
-                                                OnNewHttpRequiredFile?.Invoke(
-                                                    int.Parse(file.GetValue("id").ToString()),
-                                                    double.Parse(file.GetValue("size").ToString()),
-                                                    file.GetValue("md5").ToString(),
-                                                    file.GetValue("saveAs").ToString(),
-                                                    file.GetValue("path").ToString()
-                                                );
+                                                sw.Write(result);
+                                                sw.Close();
                                             }
                                         }
+
+                                        // Clear the force update flag if set.
+                                        widget.UpdatedDt = DateTime.Now;
+                                        widget.ForceUpdate = false;
+
+                                        // Load the result into a JSON response.
+                                        try
+                                        {
+                                            JObject json = JsonConvert.DeserializeObject<JObject>(result);
+                                            if (json != null && json.ContainsKey("files"))
+                                            {
+                                                foreach (JObject file in json.GetValueOrDefault("files").Cast<JObject>())
+                                                {
+                                                    // Make a new fileagent somehow, to download this file.
+                                                    OnNewHttpRequiredFile?.Invoke(
+                                                        int.Parse(file.GetValue("id").ToString()),
+                                                        double.Parse(file.GetValue("size").ToString()),
+                                                        file.GetValue("md5").ToString(),
+                                                        file.GetValue("saveAs").ToString(),
+                                                        file.GetValue("path").ToString()
+                                                    );
+                                                }
+                                            }
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            // TODO: mark as errored
+                                            LogMessage.Error("DataAgent", "Run", "Unable to parse JSON result. e = " + ex.Message);
+                                        }
                                     }
-                                    catch (Exception ex)
-                                    {
-                                        LogMessage.Error("DataAgent", "Run", "Unable to parse JSON result. e = " + ex.Message);
-                                    }
+                                } 
+                                catch (SoapHeaderException ex)
+                                {
+                                    // TODO: mark as errored
+                                    LogMessage.Error("DataAgent", "Run", "Unable to get data for widgetId = " + widget.WidgetId + ", e = " + ex.Message);
                                 }
                             }
 

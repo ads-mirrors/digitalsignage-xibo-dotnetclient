@@ -1,5 +1,5 @@
 ﻿/**
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -76,6 +76,16 @@ namespace XiboClient.Rendering
             // Environment
             CoreWebView2EnvironmentOptions environmentOptions;
 
+            // Where should we store user data?
+            string userDataFolder = ApplicationSettings.Default.LibraryPath;
+
+            // Workaround for paths which do not have a trailing slash and are therefore not detected as absolute
+            // e.g. E:
+            if (!userDataFolder.EndsWith("\\") && !userDataFolder.EndsWith("/"))
+            {
+                userDataFolder += "\\";
+            }
+
             // NTLM/Auth Server White Lists.
             if (!string.IsNullOrEmpty(ApplicationSettings.Default.AuthServerWhitelist))
             {
@@ -98,8 +108,9 @@ namespace XiboClient.Rendering
             await this.webView.EnsureCoreWebView2Async(
                 await CoreWebView2Environment.CreateAsync(
                         null,
-                        ApplicationSettings.Default.LibraryPath,
-                        environmentOptions));
+                        userDataFolder,
+                        environmentOptions
+                    ));
 
             // Proxy
             // Not yet supported https://github.com/MicrosoftEdge/WebView2Feedback/issues/132
@@ -107,6 +118,10 @@ namespace XiboClient.Rendering
             {
                 
             }*/
+
+            // Console logs
+            this.webView.CoreWebView2.GetDevToolsProtocolEventReceiver("Log.entryAdded").DevToolsProtocolEventReceived += OnConsoleMessage;
+            await this.webView.CoreWebView2.CallDevToolsProtocolMethodAsync("Log.enable", "{}");
         }
 
         /// <summary>
@@ -135,6 +150,7 @@ namespace XiboClient.Rendering
             if (e.IsSuccess)
             {
                 webView.CoreWebView2.Settings.IsPinchZoomEnabled = isPinchToZoomEnabled;
+                webView.CoreWebView2.Settings.IsStatusBarEnabled = false;
                 _webViewInitialised = true;
             }
             else
@@ -269,6 +285,19 @@ namespace XiboClient.Rendering
             html += "<!--VIEWPORT=" + WidthIntended.ToString() + "x" + HeightIntended.ToString() + "-->";
             html += "<!--CACHEDATE=" + DateTime.Now.ToString() + "-->";
             return html;
+        }
+
+        /// <summary>
+        /// Log console messages
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void OnConsoleMessage(object sender, CoreWebView2DevToolsProtocolEventReceivedEventArgs e)
+        {
+            if (e != null && e.ParameterObjectAsJson != null)
+            {
+                Trace.WriteLine("WebView2:" + e.ParameterObjectAsJson);
+            }
         }
     }
 }
