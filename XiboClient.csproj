@@ -369,7 +369,7 @@
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>echo F|xcopy /Y "$(TargetPath)" "$(TargetDir)Xibo.scr"
-echo F|xcopy /Y "$(TargetDir)XiboClient.exe.config" "$(TargetDir)Xibo.scr.config"</PostBuildEvent>
+    <PostBuildEvent>echo FD|xcopy /Y "$(TargetPath)" "$(TargetDir)Xibo.scr"
+echo FD|xcopy /Y "$(TargetDir)XiboClient.exe.config" "$(TargetDir)Xibo.scr.config"</PostBuildEvent>
   </PropertyGroup>
 </Project>
