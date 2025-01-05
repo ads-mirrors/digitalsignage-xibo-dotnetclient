@@ -112,9 +112,10 @@ namespace XiboClient
             MouseInterceptor.SetHook();
 #endif
 
-            MainWindow windowMain = new MainWindow(screenSaver);
-            windowMain.ShowDialog();
-
+            using (var windowMain = new MainWindow(screenSaver))
+            {
+                windowMain.ShowDialog();
+            }
 #if !DEBUG
             KeyInterceptor.UnsetHook();
             MouseInterceptor.UnsetHook();
