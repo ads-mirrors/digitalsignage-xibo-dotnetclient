@@ -516,6 +516,11 @@ namespace XiboClient.Adspace
 
                 // Read the body of the response into XML
                 XmlDocument document = new XmlDocument();
+
+                // Strip out the namespace if there is one.
+                body = body.Replace("xmlns=\"http://www.iab.com/VAST\"", "");
+
+                // Load as XML
                 document.LoadXml(body);
 
                 // Expect one or more ad nodes.
