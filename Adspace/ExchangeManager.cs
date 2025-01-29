@@ -834,6 +834,12 @@ namespace XiboClient.Adspace
                 {
                     // Nothing added this time.
                     Trace.WriteLine(new LogMessage("ExchangeManager", "Request: No ads returned this time"), LogType.Info.ToString());
+
+                    // Report a 303
+                    if (wrappedAd != null && wrappedAd.IsWrapper)
+                    {
+                        ReportError(wrappedAd.ErrorUrls, 303);
+                    }
                 }
             }
             catch (Exception e)
@@ -889,10 +895,16 @@ namespace XiboClient.Adspace
                         ad.IsWrapperResolving = true;
                         adBuffet.RemoveAt(i);
 
+                        LogMessage.Audit("ExchangeManager", "UnwrapAds", adBuffet.Count + " ads left in buffet");
+
                         // Make a request to unwrap this ad.
                         try
                         {
-                            unwrappedAds.AddRange(Request(ad.AdTagUri, ad));
+                            List<Ad> wrapAds = Request(ad.AdTagUri, ad);
+
+                            LogMessage.Audit("ExchangeManager", "UnwrapAds", wrapAds.Count + " ads unwrapped from " + ad.AdTagUri);
+
+                            unwrappedAds.AddRange(wrapAds);
                         }
                         catch (Exception e)
                         {
