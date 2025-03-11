@@ -1,5 +1,5 @@
 ﻿/**
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -27,6 +27,7 @@ using System;
 using System.Collections.Generic;
 using System.Device.Location;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 
 namespace XiboClient.Adspace
@@ -97,14 +98,22 @@ namespace XiboClient.Adspace
 
         public string GetFileName()
         {
+            // Workaround for MediaElement not supporting videos without an extension.
+            string[] types = Type.Split('/');
+
             if (WrapperFileScheme == "fileName")
             {
-                return "axe_" + Url.Split('/').Last();
+                string guessedFileName = Url.Split('/').Last();
+
+                // Do we need to put an extension on it?
+                if (string.IsNullOrEmpty(Path.GetExtension(guessedFileName)))
+                {
+                    guessedFileName = guessedFileName + "." + types[1];
+                }
+                return "axe_" + guessedFileName;
             }
             else if (Type.StartsWith("video"))
             {
-                // Workaround for MediaElement not supporting videos without an extension.
-                string[] types = Type.Split('/');
                 return "axe_" + CreativeId + "." + types[1];
             }
             else
