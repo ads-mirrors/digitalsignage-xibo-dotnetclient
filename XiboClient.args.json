@@ -1,0 +1,29 @@
+{
+  "FileVersion": 2,
+  "Id": "88215f84-47f4-4a74-b413-bc3a1443a538",
+  "Items": [
+    {
+      "Id": "9c441d87-5909-4e1f-971f-3c9c863cc5b7",
+      "Command": "StartSwitches",
+      "ExclusiveMode": true,
+      "Items": [
+        {
+          "Id": "13bef7f0-2666-4788-a2c4-f410c6031598",
+          "Command": ""
+        },
+        {
+          "Id": "56a14025-dab9-419b-a70a-e7fdb842d444",
+          "Command": "/c"
+        },
+        {
+          "Id": "65c7241c-47d8-4ff1-9917-e7594be8ad77",
+          "Command": "/s"
+        },
+        {
+          "Id": "59a0075d-277c-4125-915e-0669c1e5358a",
+          "Command": "/p"
+        }
+      ]
+    }
+  ]
+}

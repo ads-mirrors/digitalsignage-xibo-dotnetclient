@@ -87,6 +87,8 @@ namespace XiboClient
             // Always flush at the end
             Trace.WriteLine(new LogMessage("Main", "Application Finished"), LogType.Info.ToString());
             Trace.Flush();
+
+            Environment.Exit(0); // end application here as all windows are shown as dialog (sync).
         }
 
         /// <summary>
@@ -112,9 +114,10 @@ namespace XiboClient
             MouseInterceptor.SetHook();
 #endif
 
-            MainWindow windowMain = new MainWindow(screenSaver);
-            windowMain.ShowDialog();
-
+            using (var windowMain = new MainWindow(screenSaver))
+            {
+                windowMain.ShowDialog();
+            }
 #if !DEBUG
             KeyInterceptor.UnsetHook();
             MouseInterceptor.UnsetHook();
