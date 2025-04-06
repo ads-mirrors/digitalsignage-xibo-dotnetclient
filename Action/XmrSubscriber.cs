@@ -265,6 +265,10 @@ namespace XiboClient.Action
                     OnAction?.Invoke(action);
                     break;
 
+                case "criteriaUpdate":
+                    OnAction?.Invoke(JsonConvert.DeserializeObject<CriteriaUpdateAction>(opened));
+                    break;
+
                 default:
                     Trace.WriteLine(new LogMessage("XmrSubscriber - Run", "Unknown Message: " + action.action), LogType.Info.ToString());
                     break;

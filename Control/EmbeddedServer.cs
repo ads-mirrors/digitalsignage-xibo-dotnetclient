@@ -1,7 +1,7 @@
 ﻿/**
- * Copyright (C) 2021 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -24,9 +24,7 @@ using EmbedIO.WebApi;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Threading;
-using System.Windows.Documents;
 
 namespace XiboClient.Control
 {
@@ -45,6 +43,9 @@ namespace XiboClient.Control
 
         public delegate void OnDurationReceivedDelegate(string operation, int sourceId, int duration);
         public event OnDurationReceivedDelegate OnDurationReceived;
+
+        public delegate void OnCriteriaReceivedDelegate(List<CriteriaRequest> items);
+        public event OnCriteriaReceivedDelegate OnCriteriaReceived;
 
         /// <summary>
         /// Stops the thread
@@ -118,6 +119,8 @@ namespace XiboClient.Control
                     .WithController(() => new DurationController(this)))
                 .WithWebApi("/fault", m => m
                     .WithController(() => new FaultController()))
+                .WithWebApi("/criteria", m => m
+                    .WithController(() => new CriteriaController(this)))
                 .WithModule(new RestrictiveFileModule("/", new FileSystemProvider(ApplicationSettings.Default.LibraryPath, false), paths), m => m
                     .ContentCaching = false);
 
@@ -142,6 +145,15 @@ namespace XiboClient.Control
         public void Duration(string operation, int sourceId, int duration)
         {
             OnDurationReceived?.Invoke(operation, sourceId, duration);
+        }
+
+        /// <summary>
+        /// Criteria update
+        /// </summary>
+        /// <param name="items"></param>
+        public void Criteria(List<CriteriaRequest> items)
+        {
+            OnCriteriaReceived?.Invoke(items);
         }
     }
 }

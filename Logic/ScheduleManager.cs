@@ -1,7 +1,7 @@
 /**
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -18,12 +18,15 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+using CefSharp.DevTools.CSS;
+using CefSharp.DevTools.Debugger;
 using System;
 using System.Collections.Generic;
 using System.Device.Location;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Xml;
@@ -74,6 +77,10 @@ namespace XiboClient
 
         // Adspace Exchange Manager
         private ExchangeManager exchangeManager;
+
+        // Schedule Criteria
+        private Dictionary<string, Criteria> _criteria = new Dictionary<string, Criteria>();
+        private bool _isWeatherCriteriaActive = false;
 
         /// <summary>
         /// Creates a new schedule Manager
@@ -201,6 +208,12 @@ namespace XiboClient
                         _manualReset.Reset();
 
                         Trace.WriteLine(new LogMessage("ScheduleManager - Run", "Schedule Timer Ticked"), LogType.Audit.ToString());
+
+                        // Schedule Criteria, clear expired criteria
+                        ClearExipiredCriteria();
+
+                        // Clear the weather flag to reset during parsing
+                        _isWeatherCriteriaActive = false;
 
                         // Work out if there is a new schedule available, if so - raise the event
                         // Events
@@ -633,6 +646,23 @@ namespace XiboClient
                         }
                     }
 
+                    // Are its criteria active?
+                    bool isAllCriteriaActive = true;
+                    foreach (ScheduleCriteria criteria in layout.ScheduleCriteria)
+                    {
+                        if (!IsCriteriaActive(criteria))
+                        {
+                            LogMessage.Info("ScheduleManager", "ParseScheduleAndValidate", "Action not active due to Schedule Criteria: " + criteria.Metric);
+                            isAllCriteriaActive = false;
+                        }
+                    }
+
+                    if (!isAllCriteriaActive)
+                    {
+                        continue;
+                    }
+
+                    // This schedule should be included.
                     resolvedSchedule.Add(layout);
                 }
             }
@@ -1285,6 +1315,18 @@ namespace XiboClient
                         }
                     }
                 }
+                else if (childNode.Name == "criteria")
+                {
+                    // Schedule Criteria
+                    try
+                    {
+                        temp.ScheduleCriteria.Add(ParseCriteriaFromNode(childNode));
+                    }
+                    catch
+                    {
+                        LogMessage.Error("ScheduleManager", "ParseNodeIntoScheduleItem", "Invalid criteria");
+                    }
+                }
             }
 
             return temp;
@@ -1339,6 +1381,34 @@ namespace XiboClient
                         }
                     }
 
+                    // Schedule Criteria
+                    foreach (XmlNode childNode in node.ChildNodes)
+                    {
+                        // If any of the criteria are inactive, we skip the entire action (criteria are ANDed)
+                        bool isAllActive = true;
+                        if (!isAllActive)
+                        {
+                            continue;
+                        }
+
+                        if (childNode.Name == "criteria")
+                        {
+                            // Schedule Criteria
+                            try
+                            {
+                                ScheduleCriteria criteria = ParseCriteriaFromNode(childNode);
+                                if (!IsCriteriaActive(criteria)) {
+                                    LogMessage.Info("ScheduleManager", "ParseNodeListIntoActions", "Action not active due to Schedule Criteria: " + criteria.Metric);
+                                    isAllActive = false;
+                                }
+                            }
+                            catch
+                            {
+                                LogMessage.Error("ScheduleManager", "ParseNodeListIntoActions", "Invalid criteria");
+                            }
+                        }
+                    }
+
                     // is this a new high watermark for priority
                     if (actionPriority > highestPriority)
                     {
@@ -1349,6 +1419,29 @@ namespace XiboClient
                     _actionsSchedule.Add(Action.Action.CreateFromScheduleNode(node));
                 }
             }
+        }
+
+        /// <summary>
+        /// Parses criteria from the provided node
+        /// </summary>
+        /// <param name="childNode"></param>
+        private ScheduleCriteria ParseCriteriaFromNode(XmlNode childNode)
+        {
+            ScheduleCriteria criteria = new ScheduleCriteria
+            {
+                Metric = childNode.Attributes["metric"].Value,
+                Condition = childNode.Attributes["condition"].Value,
+                Type = childNode.Attributes["type"].Value,
+                Value = childNode.InnerText
+            };
+
+            // Mark that we have weather criteria in the schedule.
+            if (criteria.Type == "weather")
+            {
+                _isWeatherCriteriaActive = true;
+            }
+
+            return criteria;
         }
 
         /// <summary>
@@ -1696,6 +1789,143 @@ namespace XiboClient
             }
 
             return exchangeManager.GetAd(width, height);
+        }
+
+        /// <summary>
+        /// Is the provided scheule criteria active currently?
+        /// </summary>
+        /// <param name="criteria"></param>
+        /// <returns></returns>
+        private bool IsCriteriaActive(ScheduleCriteria scheduleCriteria)
+        {
+            if (_criteria.ContainsKey(scheduleCriteria.Metric))
+            {
+                LogMessage.Audit("ScheduleManager", "IsCriteriaActive", "Testing %s with %s and condition %s against %s");
+                Criteria criteria = _criteria[scheduleCriteria.Metric];
+                if (criteria.IsExpired())
+                {
+                    LogMessage.Audit("ScheduleManager", "IsCriteriaActive", scheduleCriteria.Metric + " expired.");
+                    return false;
+                }
+
+                // Active and not expired. 
+                // Test condition
+                switch (scheduleCriteria.Condition)
+                {
+                    case "set":
+                        // We must be set to arrive here.
+                        return true;
+
+                    case "eq":
+                        return scheduleCriteria.Value == criteria.Value;
+
+                    case "neq":
+                        return scheduleCriteria.Value != criteria.Value;
+
+                    case "contains":
+                        return scheduleCriteria.Value.Contains(criteria.Value);
+
+                    case "ncontains":
+                        return !scheduleCriteria.Value.Contains(criteria.Value);
+
+                    // Assume integer comparisons for the lt/gt comparisons
+                    case "lt":
+                        try
+                        {
+                            return int.Parse(criteria.Value) < int.Parse(scheduleCriteria.Value);
+                        }
+                        catch
+                        { 
+                            return false;
+                        }
+
+                    case "lte":
+                        try
+                        {
+                            return int.Parse(criteria.Value) <= int.Parse(scheduleCriteria.Value);
+                        }
+                        catch
+                        {
+                            return false;
+                        }
+
+                    case "gte":
+                        try
+                        {
+                            return int.Parse(criteria.Value) >= int.Parse(scheduleCriteria.Value);
+                        }
+                        catch
+                        {
+                            return false;
+                        }
+
+                    case "gt":
+                        try
+                        {
+                            return int.Parse(criteria.Value) > int.Parse(scheduleCriteria.Value);
+                        }
+                        catch
+                        {
+                            return false;
+                        }
+
+                    default:
+                        LogMessage.Audit("ScheduleManager", "IsCriteriaActive", "Unknown condition: " + scheduleCriteria.Condition);
+                        return false;
+                }
+            }
+
+            LogMessage.Audit("ScheduleManager", "IsCriteriaActive", scheduleCriteria.Metric + " not active.");
+
+            return false;
+        }
+
+        /// <summary>
+        /// Add or replace criteria (TTL 300)
+        /// </summary>
+        /// <param name="metric"></param>
+        /// <param name="value"></param>
+        public void AddOrReplaceCriteria(string metric, string value)
+        {
+            AddOrReplaceCriteria(metric, value, 300);
+        }
+
+        /// <summary>
+        /// Add or replace criteria with TTL
+        /// </summary>
+        /// <param name="metric"></param>
+        /// <param name="value"></param>
+        /// <param name="ttl"></param>
+        public void AddOrReplaceCriteria(string metric, string value, int ttl)
+        {
+            LogMessage.Audit("ScheduleManager", "AddOrReplaceCriteria", "Setting " + metric + " with value " + value + ", ttl: " +  ttl);
+
+            _criteria[metric] = new Criteria(value, ttl);
+        }
+
+        /// <summary>
+        /// Clears all expired criteria
+        /// </summary>
+        public void ClearExipiredCriteria()
+        {
+            LogMessage.Audit("ScheduleManager", "ClearExpiredCriteria", "Clearing any expired criteria");
+
+            foreach (KeyValuePair<string, Criteria> criteria in _criteria.ToList())
+            {
+                if (criteria.Value.IsExpired())
+                {
+                    _criteria.Remove(criteria.Key);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Are there any criteria active related to weather.
+        /// </summary>
+        /// <returns></returns>
+        public bool IsWeatherCriteriaActive()
+        {
+            return _isWeatherCriteriaActive;
         }
 
         #endregion

@@ -104,6 +104,7 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Action\Command.cs" />
+    <Compile Include="Action\CriteriaUpdateAction.cs" />
     <Compile Include="Action\DataUpdatePlayerAction.cs" />
     <Compile Include="Action\HttpCommand.cs" />
     <Compile Include="Action\HttpCommandConfig.cs" />
@@ -119,6 +120,8 @@
     <Compile Include="Adspace\Ad.cs" />
     <Compile Include="Adspace\AdspaceNoAdException.cs" />
     <Compile Include="Adspace\ExchangeManager.cs" />
+    <Compile Include="Control\CriteriaController.cs" />
+    <Compile Include="Control\CriteriaRequest.cs" />
     <Compile Include="Control\DurationController.cs" />
     <Compile Include="Control\DurationRequest.cs" />
     <Compile Include="Control\EmbeddedServer.cs" />
@@ -142,6 +145,7 @@
     <Compile Include="Action\Action.cs" />
     <Compile Include="Logic\ApplicationSettings.cs" />
     <Compile Include="Logic\CacheManager.cs" />
+    <Compile Include="Logic\Criteria.cs" />
     <Compile Include="Logic\HardwareKey.cs" />
     <Compile Include="Logic\Hashes.cs" />
     <Compile Include="Logic\KeyInterceptor.cs" />
@@ -153,6 +157,7 @@
     <Compile Include="Logic\RegionOptions.cs" />
     <Compile Include="Logic\RequiredFiles.cs" />
     <Compile Include="Logic\Schedule.cs" />
+    <Compile Include="Logic\ScheduleCriteria.cs" />
     <Compile Include="Logic\ScheduleItem.cs" />
     <Compile Include="Logic\ScheduleManager.cs" />
     <Compile Include="Logic\ScreenShot.cs" />
@@ -201,6 +206,7 @@
     <Compile Include="XmdsAgents\RegisterAgent.cs" />
     <Compile Include="XmdsAgents\ScheduleAndFilesAgent.cs" />
     <Compile Include="XmdsAgents\StatAgent.cs" />
+    <Compile Include="XmdsAgents\WeatherAgent.cs" />
     <Compile Include="XmdsAgents\WidgetData.cs" />
     <Page Include="InfoScreen.xaml">
       <SubType>Designer</SubType>
@@ -287,10 +293,10 @@
     <WCFMetadata Include="Connected Services\" />
   </ItemGroup>
   <ItemGroup>
-    <WebReferenceUrl Include="https://raw.githubusercontent.com/xibosignage/xibo-cms/westphal/lib/Xmds/service_v7.wsdl">
+    <WebReferenceUrl Include="https://raw.githubusercontent.com/xibosignage/xibo-cms/develop/lib/Xmds/service_v7.wsdl">
       <UrlBehavior>Dynamic</UrlBehavior>
       <RelPath>Web References\xmds\</RelPath>
-      <UpdateFromURL>https://raw.githubusercontent.com/xibosignage/xibo-cms/westphal/lib/Xmds/service_v7.wsdl</UpdateFromURL>
+      <UpdateFromURL>https://raw.githubusercontent.com/xibosignage/xibo-cms/develop/lib/Xmds/service_v7.wsdl</UpdateFromURL>
       <ServiceLocationURL>
       </ServiceLocationURL>
       <CachedDynamicPropName>
