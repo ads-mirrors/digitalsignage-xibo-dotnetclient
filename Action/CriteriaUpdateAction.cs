@@ -28,6 +28,10 @@ namespace XiboClient.Action
         public const string Name = "criteriaUpdate";
         public List<CriteriaRequest> Items { get; set; }
 
+        public CriteriaUpdateAction() { 
+            Items = new List<CriteriaRequest>();
+        }
+
         public string GetActionName()
         {
             return Name;
