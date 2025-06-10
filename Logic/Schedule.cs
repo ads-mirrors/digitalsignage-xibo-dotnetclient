@@ -1,7 +1,7 @@
 /**
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -98,8 +98,11 @@ namespace XiboClient
 
         // Data Agent
         private DataAgent _dataAgent;
-
         Thread _dataAgentThread;
+
+        // Weather Agent
+        private WeatherAgent _weatherAgent;
+        Thread _weatherAgentThread;
 
         // XMR Subscriber
         private XmrSubscriber _xmrSubscriber;
@@ -146,6 +149,14 @@ namespace XiboClient
             _dataAgentThread = new Thread(new ThreadStart(_dataAgent.Run))
             {
                 Name = "DataAgent"
+            };
+
+            // Weather Agent
+            _weatherAgent = new WeatherAgent();
+            _weatherAgent.OnWeather += _weatherAgent_OnWeather;
+            _weatherAgentThread = new Thread(new ThreadStart(_weatherAgent.Run))
+            {
+                Name = "WeatherAgent"
             };
 
             // Create a RequiredFilesAgent
@@ -197,6 +208,7 @@ namespace XiboClient
             _server.OnServerClosed += _server_OnServerClosed;
             _server.OnTriggerReceived += EmbeddedServerOnTriggerReceived;
             _server.OnDurationReceived += EmbeddedServerOnDurationReceived;
+            _server.OnCriteriaReceived += _server_OnCriteriaReceived;
             _serverThread = new Thread(new ThreadStart(_server.Run))
             {
                 Name = "EmbeddedServer"
@@ -228,6 +240,9 @@ namespace XiboClient
 
             // Start the Faults thread
             _faultsAgentThread.Start();
+
+            // Start the Weather Agent thread
+            _weatherAgentThread.Start();
 
             // Start the Proof of Play thread
             StatManager.Instance.Start();
@@ -309,6 +324,9 @@ namespace XiboClient
                 ClientInfo.Instance.XmrSubscriberStatus = "Inactive (" + ApplicationSettings.Default.XmrNetworkAddress + "), last activity: " + _xmrSubscriber.LastHeartBeat.ToString();
                 Trace.WriteLine(new LogMessage("Schedule - OnScheduleManagerCheckComplete", "XMR heart beat last received over 5 minutes ago."), LogType.Audit.ToString());
             }
+
+            // Set whether the weather agent should collect weather
+            _weatherAgent.Enable(_scheduleManager.IsWeatherCriteriaActive());
         }
 
         /// <summary>
@@ -322,7 +340,8 @@ namespace XiboClient
                 _logAgentThread.IsAlive &&
                 _faultsAgentThread.IsAlive &&
                 _libraryAgentThread.IsAlive &&
-                _xmrSubscriberThread.IsAlive;
+                _xmrSubscriberThread.IsAlive &&
+                _weatherAgentThread.IsAlive;
         }
 
         /// <summary>
@@ -423,6 +442,14 @@ namespace XiboClient
 
                 case "purgeAll":
                     _libraryAgent.PurgeAll();
+                    break;
+
+                case CriteriaUpdateAction.Name:
+                    foreach(CriteriaRequest item in ((CriteriaUpdateAction)action).Items)
+                    {
+                        _scheduleManager.AddOrReplaceCriteria(item.metric, item.value, item.ttl);
+                    }
+                    _scheduleManager.RunNow();
                     break;
             }
         }
@@ -709,6 +736,12 @@ namespace XiboClient
             // Stop the Faults Agent Thread
             _faultsAgent.Stop();
 
+            // Stop the weather agent
+            _weatherAgent.Stop();
+
+            // Stop the data agent
+            _dataAgent.Stop();
+
             // Stop the Proof of Play Thread
             StatManager.Instance.Stop();
 
@@ -781,6 +814,32 @@ namespace XiboClient
         private void EmbeddedServerOnDurationReceived(string operation, int sourceId, int duration)
         {
             OnTriggerReceived?.Invoke("duration", operation, sourceId, duration);
+        }
+
+        /// <summary>
+        /// Criteria received from an embedded server
+        /// </summary>
+        /// <param name="items"></param>
+        private void _server_OnCriteriaReceived(List<CriteriaRequest> items)
+        {
+            foreach (CriteriaRequest item in items)
+            {
+                _scheduleManager.AddOrReplaceCriteria(item.metric, item.value, item.ttl);
+            }
+            _scheduleManager.RunNow();
+        }
+
+        /// <summary>
+        /// On Weather received.
+        /// </summary>
+        /// <param name="items"></param>
+        private void _weatherAgent_OnWeather(List<CriteriaRequest> items)
+        {
+            foreach (CriteriaRequest item in items)
+            {
+                _scheduleManager.AddOrReplaceCriteria(item.metric, item.value, item.ttl);
+            }
+            _scheduleManager.RunNow();
         }
 
         /// <summary>

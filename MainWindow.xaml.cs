@@ -44,7 +44,7 @@ namespace XiboClient
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class MainWindow : Window, IDisposable
     {
         /// <summary>
         /// Schedule Class
@@ -81,6 +81,7 @@ namespace XiboClient
         /// The InfoScreen
         /// </summary>
         private InfoScreen infoScreen;
+        private bool disposedValue;
 
         #region DLL Imports
 
@@ -1386,5 +1387,51 @@ namespace XiboClient
             // Yield and restart
             _schedule.NextLayout();
         }
+
+        #region Dispose
+
+
+
+        ~MainWindow()
+        {
+            Dispose(disposing: false);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    // dispose managed state (managed objects)
+                }
+
+                // free unmanaged resources (unmanaged objects) and override finalizer
+                // set large fields to null
+
+                Microsoft.Win32.SystemEvents.DisplaySettingsChanged -= SystemEvents_DisplaySettingsChanged;
+                MouseInterceptor.Instance.MouseClickEvent -= MouseInterceptor_MouseClickEvent;
+                MouseInterceptor.Instance.MouseMoveEvent -= MouseInterceptor_MouseMoveEvent;
+                if (infoScreen != null)
+                {
+                    infoScreen.Closed -= InfoScreen_Closed;
+                }
+
+                KeyStore.Instance.KeyPress -= Instance_KeyPress;
+
+                disposedValue = true;
+            }
+        }
+
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
+        }
+
+        #endregion
     }
+
+
 }

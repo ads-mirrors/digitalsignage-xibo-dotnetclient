@@ -1,7 +1,7 @@
 ﻿/**
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -21,11 +21,14 @@
 using NetMQ;
 using NetMQ.Sockets;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Org.BouncyCastle.Crypto;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
+using System.Windows.Markup;
+using XiboClient.Control;
 using XiboClient.Log;
 using XiboClient.Logic;
 
@@ -263,6 +266,22 @@ namespace XiboClient.Action
 
                 case "purgeAll":
                     OnAction?.Invoke(action);
+                    break;
+
+                case "criteriaUpdate":
+                    // Process into a CriteriaUpdateAction
+                    var update = JsonConvert.DeserializeObject<JObject>(opened);
+                    var updateAction = new CriteriaUpdateAction();
+                    foreach (var item in update["criteriaUpdates"])
+                    {
+                        updateAction.Items.Add(new CriteriaRequest
+                        {
+                            metric = item["metric"].ToString(),
+                            value = item["value"].ToString(),
+                            ttl = int.Parse(item["ttl"].ToString())
+                        });
+                    }
+                    OnAction?.Invoke(updateAction);
                     break;
 
                 default:
