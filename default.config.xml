@@ -60,4 +60,6 @@
   <IsAdspaceEnabled>false</IsAdspaceEnabled>
   <VideoStartTimeout>10</VideoStartTimeout>
   <AllowSingleSignOnUsingOSPrimaryAccount>false</AllowSingleSignOnUsingOSPrimaryAccount>
+  <CefLocale></CefLocale>
+  <CefAcceptLanguageList></CefAcceptLanguageList>
 </ApplicationSettings>

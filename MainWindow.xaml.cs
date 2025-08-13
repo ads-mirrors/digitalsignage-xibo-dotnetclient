@@ -1,7 +1,7 @@
 ﻿/**
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -368,6 +368,16 @@ namespace XiboClient
             settings.CefCommandLineArgs["autoplay-policy"] = "no-user-gesture-required";
             settings.CefCommandLineArgs["disable-pinch"] = "1";
             settings.CefCommandLineArgs["disable-usb-keyboard-detect"] = "1";
+
+            if (!string.IsNullOrEmpty(ApplicationSettings.Default.CefLocale))
+            {
+                settings.Locale = ApplicationSettings.Default.CefLocale;
+            }
+
+            if (!string.IsNullOrEmpty(ApplicationSettings.Default.CefAcceptLanguageList))
+            {
+                settings.AcceptLanguageList = ApplicationSettings.Default.CefAcceptLanguageList;
+            }
 
             CefSharp.Cef.Initialize(settings);
         }

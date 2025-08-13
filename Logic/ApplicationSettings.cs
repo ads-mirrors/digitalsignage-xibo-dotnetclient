@@ -1,7 +1,7 @@
 ﻿/**
  * Copyright (C) 2025 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -387,6 +387,8 @@ namespace XiboClient
         public string NewCmsKey { get; set; }
         public string XmdsCheckSchedule { get; set; }
         public string XmdsCheckRf { get; set; }
+        public string CefLocale { get; set; }
+        public string CefAcceptLanguageList { get; set; }
 
         private string _libraryPath;
         public string LibraryPath
